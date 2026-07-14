@@ -2,7 +2,7 @@
   "name": "KittyPlaysYourMedia",
   "short_name": "KittyPlayer",
   "description": "Personal local media player with maximum cat energy 🐱",
-  "start_url": "/index.html",
+  "start_url": "/KittyPlaysYourMedia/index.html",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#1a1a1a",
@@ -25,7 +25,7 @@
   "shortcuts": [
     {
       "name": "Open Player",
-      "url": "/index.html",
+      "url": "KittyPlaysYourMedia/index.html",
       "description": "Launch KittyPlaysYourMedia"
     }
   ]
