@@ -1,0 +1,32 @@
+{
+  "name": "KittyPlaysYourMedia",
+  "short_name": "KittyPlayer",
+  "description": "Personal local media player with maximum cat energy 🐱",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "orientation": "any",
+  "categories": ["media", "entertainment", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%231a1a1a'/%3E%3Ctext x='256' y='220' text-anchor='middle' font-size='120'%3E🐱%3C/text%3E%3Ctext x='256' y='360' text-anchor='middle' font-size='80' fill='%23FF8C00' font-family='monospace' font-weight='bold'%3EKPYM%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%231a1a1a'/%3E%3Ctext x='256' y='240' text-anchor='middle' font-size='100'%3E🐱%3C/text%3E%3Ctext x='256' y='360' text-anchor='middle' font-size='60' fill='%23FF8C00' font-family='monospace' font-weight='bold'%3EKPYM%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Player",
+      "url": "/index.html",
+      "description": "Launch KittyPlaysYourMedia"
+    }
+  ]
+}
