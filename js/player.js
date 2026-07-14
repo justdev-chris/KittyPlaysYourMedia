@@ -2,6 +2,8 @@
 // PLAYER.JS - Media Controls + Keyboard
 // ============================================
 
+import { showNotification } from './ui.js';
+
 let videoPlayer = null;
 let audioPlayer = null;
 let currentPlayer = null;
@@ -11,9 +13,7 @@ export function initPlayer(video, audio) {
     videoPlayer = video;
     audioPlayer = audio;
     
-    // Auto-play next when ended
     videoPlayer.addEventListener('ended', () => {
-        // We'll handle this from app.js
         isPlaying = false;
         updatePlayButton(false);
     });
@@ -22,41 +22,53 @@ export function initPlayer(video, audio) {
         updatePlayButton(false);
     });
     
-    // Update time display
     videoPlayer.addEventListener('timeupdate', updateTimeDisplay);
     audioPlayer.addEventListener('timeupdate', updateTimeDisplay);
 }
 
 export function playFile(file) {
-    // Determine if video or audio
+    if (!file) {
+        console.warn('No file provided');
+        return;
+    }
+    
     const isVideo = file.type?.startsWith('video/') || 
-                    file.name?.match(/\.(mp4|webm|mov|avi|mkv)$/i);
+                    file.name?.match(/\.(mp4|webm|mov|avi|mkv|m4v)$/i);
     const isAudio = file.type?.startsWith('audio/') || 
-                    file.name?.match(/\.(mp3|wav|flac|aac|ogg)$/i);
+                    file.name?.match(/\.(mp3|wav|flac|aac|ogg|m4a)$/i);
+    
+    const url = URL.createObjectURL(file);
     
     if (isVideo) {
         videoPlayer.style.display = 'block';
         audioPlayer.style.display = 'none';
-        videoPlayer.src = URL.createObjectURL(file);
+        videoPlayer.src = url;
         currentPlayer = videoPlayer;
     } else if (isAudio) {
         videoPlayer.style.display = 'none';
         audioPlayer.style.display = 'block';
-        audioPlayer.src = URL.createObjectURL(file);
+        audioPlayer.src = url;
         currentPlayer = audioPlayer;
     } else {
-        console.warn('Unknown file type:', file.type, file.name);
-        return;
+        videoPlayer.style.display = 'block';
+        audioPlayer.style.display = 'none';
+        videoPlayer.src = url;
+        currentPlayer = videoPlayer;
     }
     
-    currentPlayer.play();
-    isPlaying = true;
-    updatePlayButton(true);
+    const playPromise = currentPlayer.play();
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            isPlaying = true;
+            updatePlayButton(true);
+        }).catch(() => {
+            showNotification('🐱 Click play to start');
+        });
+    }
 }
 
 export function togglePlay() {
     if (!currentPlayer) {
-        // Try to play first file from playlist
         const event = new CustomEvent('play-first-file');
         document.dispatchEvent(event);
         return;
@@ -77,11 +89,9 @@ export function setVolume(value) {
     if (videoPlayer) videoPlayer.volume = vol;
     if (audioPlayer) audioPlayer.volume = vol;
     
-    // Update slider
     const slider = document.getElementById('volume-slider');
     if (slider) slider.value = vol;
     
-    // Update icon
     const btn = document.getElementById('btn-volume');
     if (btn) {
         if (vol === 0) btn.textContent = '🔇';
@@ -128,6 +138,5 @@ function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Export for app.js
 export function getCurrentPlayer() { return currentPlayer; }
 export function isCurrentlyPlaying() { return isPlaying; }
