@@ -5,13 +5,13 @@
 const CACHE_NAME = 'kitty-player-v1';
 const ASSETS = [
   '/',
-  '/index.html',
-  '/manifest.json',
-  '/css/style.css',
-  '/js/app.js',
-  '/js/db.js',
-  '/js/player.js',
-  '/js/ui.js'
+  '/KittyPlaysYourMedia/index.html',
+  '/KittyPlaysYourMedia/manifest.json',
+  '/KittyPlaysYourMedia/css/style.css',
+  '/KittyPlaysYourMedia/js/app.js',
+  '/KittyPlaysYourMedia/js/db.js',
+  '/KittyPlaysYourMedia/js/player.js',
+  '/KittyPlaysYourMedia/js/ui.js'
 ];
 
 // ----- INSTALL: Cache all assets -----
