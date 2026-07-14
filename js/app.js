@@ -3,17 +3,17 @@
 // ============================================
 
 import { initDB, savePlaylist, getPlaylists, saveSettings, getSettings } from './db.js';
-import { initPlayer, playFile, togglePlay, setVolume, setSpeed } from './player.js';
+import { initPlayer, playFile, togglePlay, setVolume, setSpeed, getCurrentPlayer } from './player.js';
 import { renderTree, renderPlaylist, updateUI, showNotification } from './ui.js';
 
 // ----- STATE -----
 export const state = {
     currentTab: 'all',
     tabs: ['all', 'favorites', 'recent'],
-    files: [], // All files { id, name, path, type, size, data }
-    treeData: {}, // Folder structure
+    files: [],
+    treeData: {},
     currentFile: null,
-    playlists: {}, // { tabName: [fileIds] }
+    playlists: {},
     settings: { volume: 0.8, speed: 1.0, lastTab: 'all' }
 };
 
@@ -33,6 +33,27 @@ const volumeSlider = $('#volume-slider');
 const speedSelect = $('#speed-select');
 const tabBar = document.querySelector('.tabs-container');
 
+// ----- PLAY FIRST FILE EVENT -----
+document.addEventListener('play-first-file', () => {
+    const tab = state.currentTab;
+    const files = state.playlists[tab] || [];
+    if (files.length > 0 && files[0].data instanceof File) {
+        playFile(files[0].data);
+    } else {
+        showNotification('😺 No files in this playlist!');
+    }
+});
+
+// ----- REMOVE FILE EVENT -----
+document.addEventListener('remove-file', (e) => {
+    removeFile(e.detail.id);
+});
+
+// ----- PLAY FILE EVENT -----
+document.addEventListener('play-file', (e) => {
+    playFileById(e.detail.id);
+});
+
 // ----- INIT -----
 export async function initApp() {
     // Load settings
@@ -51,7 +72,6 @@ export async function initApp() {
         playlists.forEach(p => {
             state.playlists[p.name] = p.files || [];
         });
-        // Restore tabs
         const tabNames = playlists.map(p => p.name);
         state.tabs = tabNames.length > 0 ? tabNames : ['all', 'favorites', 'recent'];
     }
@@ -75,18 +95,11 @@ export async function initApp() {
     // Event listeners
     setupEventListeners();
 
-    // Auto-load any saved files
-    if (state.playlists[state.currentTab]?.length > 0) {
-        const firstFile = state.playlists[state.currentTab][0];
-        // We need to re-hydrate from IndexedDB (will be handled)
-    }
-
     console.log('🐱 KittyPlaysYourMedia initialized!');
 }
 
 // ----- RENDER TABS -----
 function renderTabs() {
-    // Clear existing tabs (keep new tab button)
     const existingTabs = tabBar.querySelectorAll('.tab-btn:not(#btn-new-tab)');
     existingTabs.forEach(t => t.remove());
 
@@ -130,7 +143,6 @@ function switchTab(tabName) {
     const files = state.playlists[tabName] || [];
     renderPlaylist(files);
     
-    // Save last tab
     state.settings.lastTab = tabName;
     saveSettings(state.settings);
 }
@@ -154,11 +166,9 @@ function deleteTab(tabName) {
 
 function createTab(name) {
     name = name.trim() || 'Untitled';
-    // Sanitize
     name = name.replace(/[^a-zA-Z0-9 ]/g, '');
     if (!name) name = 'Untitled';
     
-    // Avoid duplicates
     let finalName = name;
     let counter = 1;
     while (state.tabs.includes(finalName)) {
@@ -183,7 +193,6 @@ export function addFiles(fileList) {
     
     const newFiles = [];
     for (const file of fileList) {
-        // Check if already exists (by name + size)
         const exists = state.playlists[tab].some(f => 
             f.name === file.name && f.size === file.size
         );
@@ -195,7 +204,7 @@ export function addFiles(fileList) {
             path: file.webkitRelativePath || file.name,
             size: file.size,
             type: file.type || 'unknown',
-            data: file, // Store the File object
+            data: file,
             addedAt: Date.now()
         };
         newFiles.push(fileData);
@@ -207,6 +216,14 @@ export function addFiles(fileList) {
         updateTree(state.playlists[tab]);
         savePlaylist(tab, state.playlists[tab]);
         showNotification(`🐱 ${newFiles.length} file(s) added!`);
+        
+        const player = document.getElementById('media-player');
+        if (!player.src || player.paused) {
+            const firstFile = state.playlists[tab][0];
+            if (firstFile && firstFile.data instanceof File) {
+                playFile(firstFile.data);
+            }
+        }
     } else {
         showNotification('😺 Files already in playlist!');
     }
@@ -231,33 +248,31 @@ export function playFileById(fileId) {
     if (!state.playlists[tab]) return;
     
     const file = state.playlists[tab].find(f => f.id === fileId);
-    if (file && file.data) {
+    if (file && file.data instanceof File) {
         state.currentFile = file;
         playFile(file.data);
         renderPlaylist(state.playlists[tab], fileId);
+    } else {
+        showNotification('⚠️ File not found. Please re-add it.');
     }
 }
 
 // ----- TREE VIEW -----
 function updateTree(files) {
-    // Build folder structure
     const tree = {};
     files.forEach(file => {
         const parts = file.path.split('/');
         if (parts.length > 1) {
-            // Has folder
             let current = tree;
             for (let i = 0; i < parts.length - 1; i++) {
                 const folder = parts[i];
                 if (!current[folder]) current[folder] = {};
                 current = current[folder];
             }
-            // Add file to last folder
             const fileName = parts[parts.length - 1];
             if (!current._files) current._files = [];
             current._files.push(file);
         } else {
-            // Root level
             if (!tree._files) tree._files = [];
             tree._files.push(file);
         }
@@ -269,7 +284,6 @@ function updateTree(files) {
 
 // ----- EVENT LISTENERS -----
 function setupEventListeners() {
-    // Upload
     btnUpload.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
@@ -278,10 +292,8 @@ function setupEventListeners() {
         fileInput.value = '';
     });
 
-    // Play/Pause
     btnPlay.addEventListener('click', togglePlay);
 
-    // Volume
     volumeSlider.addEventListener('input', (e) => {
         const vol = parseFloat(e.target.value);
         setVolume(vol);
@@ -289,7 +301,6 @@ function setupEventListeners() {
         saveSettings(state.settings);
     });
 
-    // Speed
     speedSelect.addEventListener('change', (e) => {
         const speed = parseFloat(e.target.value);
         setSpeed(speed);
@@ -297,7 +308,6 @@ function setupEventListeners() {
         saveSettings(state.settings);
     });
 
-    // Fullscreen
     btnFullscreen.addEventListener('click', () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen?.();
@@ -306,15 +316,12 @@ function setupEventListeners() {
         }
     });
 
-    // New tab
     btnNewTab.addEventListener('click', () => {
         const name = prompt('🐱 Enter tab name:');
         if (name) createTab(name);
     });
 
-    // Keyboard shortcuts (global)
     document.addEventListener('keydown', (e) => {
-        // Don't trigger if typing in input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
         
         switch(e.key) {
@@ -328,7 +335,6 @@ function setupEventListeners() {
         }
     });
 
-    // Drag and drop
     document.addEventListener('dragover', (e) => e.preventDefault());
     document.addEventListener('drop', (e) => {
         e.preventDefault();
@@ -337,7 +343,6 @@ function setupEventListeners() {
         }
     });
 
-    // Settings button (toggle tree panel on mobile)
     btnSettings.addEventListener('click', () => {
         const treePanel = document.getElementById('tree-panel');
         if (window.innerWidth <= 480) {
@@ -351,5 +356,4 @@ function setupEventListeners() {
 // ----- START APP -----
 document.addEventListener('DOMContentLoaded', initApp);
 
-// Export for debugging
 window.__kitty = { state, addFiles, removeFile, playFileById, createTab, switchTab };
