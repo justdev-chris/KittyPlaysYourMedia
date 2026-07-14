@@ -2,8 +2,6 @@
 // UI.JS - DOM Updates + Cat Animations
 // ============================================
 
-import { playFileById } from './app.js';
-
 // ----- RENDER PLAYLIST -----
 export function renderPlaylist(files, activeId = null) {
     const container = document.getElementById('playlist-items');
@@ -23,10 +21,12 @@ export function renderPlaylist(files, activeId = null) {
         </li>
     `).join('');
     
-    // Event listeners
     container.querySelectorAll('li[data-id]').forEach(li => {
         const id = parseFloat(li.dataset.id);
-        li.addEventListener('click', () => playFileById(id));
+        li.addEventListener('click', () => {
+            const event = new CustomEvent('play-file', { detail: { id } });
+            document.dispatchEvent(event);
+        });
         const deleteBtn = li.querySelector('.file-delete');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', (e) => {
@@ -37,7 +37,6 @@ export function renderPlaylist(files, activeId = null) {
         }
     });
     
-    // Update count
     const count = document.getElementById('file-count');
     if (count) count.textContent = `${files.length} files`;
 }
@@ -55,7 +54,6 @@ export function renderTree(tree, container = null) {
     
     treeContainer.innerHTML = buildTreeHTML(tree, 0);
     
-    // Add expand/collapse listeners
     treeContainer.querySelectorAll('.tree-toggle').forEach(toggle => {
         toggle.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -68,29 +66,24 @@ export function renderTree(tree, container = null) {
         });
     });
     
-    // File click listeners
     treeContainer.querySelectorAll('.tree-item.file').forEach(item => {
         item.addEventListener('click', () => {
             const id = parseFloat(item.dataset.id);
-            if (id) playFileById(id);
+            if (id) {
+                const event = new CustomEvent('play-file', { detail: { id } });
+                document.dispatchEvent(event);
+            }
         });
     });
 }
 
 function buildTreeHTML(node, depth) {
     let html = '';
-    const indent = '&nbsp;'.repeat(depth * 4);
-    
-    // Sort keys: folders first, then files
     const keys = Object.keys(node).filter(k => k !== '_files').sort();
     const files = node._files || [];
     
-    // Folders
     for (const key of keys) {
         const childNode = node[key];
-        const hasChildren = Object.keys(childNode).filter(k => k !== '_files').length > 0 || 
-                           (childNode._files && childNode._files.length > 0);
-        
         html += `
             <div class="tree-item folder" data-path="${key}">
                 <span class="tree-toggle collapsed">▼</span>
@@ -104,7 +97,6 @@ function buildTreeHTML(node, depth) {
         `;
     }
     
-    // Files
     for (const file of files) {
         const icon = file.type?.startsWith('video/') ? '🎬' : 
                      file.type?.startsWith('audio/') ? '🎵' : '📄';
@@ -122,14 +114,12 @@ function buildTreeHTML(node, depth) {
 
 // ----- UPDATE UI -----
 export function updateUI(data) {
-    // Generic UI update function
     if (data.playlist) renderPlaylist(data.playlist);
     if (data.tree) renderTree(data.tree);
 }
 
 // ----- NOTIFICATIONS -----
 export function showNotification(message, duration = 2000) {
-    // Remove old notification
     const old = document.querySelector('.kitty-notification');
     if (old) old.remove();
     
@@ -205,7 +195,6 @@ function createLoadingOverlay() {
     return div;
 }
 
-// ----- EXPOSE FOR APP.JS -----
 export default {
     renderPlaylist,
     renderTree,
