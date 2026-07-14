@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="manifest.json">
+    <title>KittyPlaysYourMedia 🐱</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- ===== HEADER with Cat Ears ===== -->
+    <header id="app-header">
+        <div class="header-left">
+            <span class="cat-icon">🐱</span>
+            <h1>KittyPlaysYourMedia</h1>
+        </div>
+        <div class="header-right">
+            <button id="btn-upload" class="cat-btn" title="Add files">📂</button>
+            <button id="btn-settings" class="cat-btn" title="Settings">⚙️</button>
+            <input type="file" id="file-input" multiple accept="audio/*,video/*" style="display:none">
+        </div>
+    </header>
+
+    <!-- ===== TAB BAR ===== -->
+    <nav id="tab-bar">
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="all">📋 All Files</button>
+            <button class="tab-btn" data-tab="favorites">⭐ Favorites</button>
+            <button class="tab-btn" data-tab="recent">🕐 Recent</button>
+            <button class="tab-btn" id="btn-new-tab">➕ New</button>
+        </div>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="app-main">
+        <!-- LEFT: Tree View -->
+        <aside id="tree-panel">
+            <div class="tree-header">
+                <span>🌳 Library</span>
+                <button id="btn-collapse-all" class="tiny-btn">−</button>
+            </div>
+            <div id="tree-container">
+                <!-- Tree rendered by JS -->
+                <div class="tree-empty">No files yet. Click 📂 to add!</div>
+            </div>
+        </aside>
+
+        <!-- RIGHT: Player + Playlist -->
+        <section id="player-panel">
+            <!-- Video/Audio Player -->
+            <div id="player-wrapper">
+                <video id="media-player" controls playsinline></video>
+                <audio id="audio-player" controls style="display:none"></audio>
+                
+                <!-- Cat Overlay (whiskers + tail) -->
+                <div id="cat-overlay">
+                    <div class="whisker left"></div>
+                    <div class="whisker right"></div>
+                    <div class="tail-wag"></div>
+                </div>
+            </div>
+
+            <!-- Player Controls (custom) -->
+            <div id="custom-controls">
+                <button id="btn-play" class="paw-btn" title="Play/Pause (Space)">▶</button>
+                <button id="btn-rewind" class="paw-btn" title="Rewind 10s (←)">⏪</button>
+                <button id="btn-forward" class="paw-btn" title="Forward 10s (→)">⏩</button>
+                <span id="time-display">0:00 / 0:00</span>
+                <div class="volume-container">
+                    <button id="btn-volume" class="paw-btn" title="Mute (M)">🔊</button>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8">
+                </div>
+                <select id="speed-select" title="Playback speed">
+                    <option value="0.5">0.5x</option>
+                    <option value="0.75">0.75x</option>
+                    <option value="1.0" selected>1.0x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2.0">2.0x</option>
+                </select>
+                <button id="btn-fullscreen" class="paw-btn" title="Fullscreen (F)">⛶</button>
+            </div>
+
+            <!-- Playlist (flat list for current tab) -->
+            <div id="playlist-container">
+                <div class="playlist-header">
+                    <span>🎵 Playlist</span>
+                    <span id="file-count">0 files</span>
+                </div>
+                <ul id="playlist-items">
+                    <li class="empty-playlist">Add some media to get started!</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== HIDDEN INPUTS ===== -->
+    <input type="file" id="file-input-hidden" multiple accept="audio/*,video/*" style="display:none">
+
+    <!-- ===== SCRIPTS ===== -->
+    <script type="module">
+        // Import all modules
+        import './js/db.js';
+        import './js/player.js';
+        import './js/ui.js';
+        import './js/app.js';
+    </script>
+</body>
+</html>
